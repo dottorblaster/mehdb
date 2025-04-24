@@ -1,7 +1,16 @@
-FROM centos
+FROM registry.opensuse.org/opensuse/bci/golang:1.23 AS build
+
 WORKDIR /app
-RUN chown -R 1001:1 /app
-USER 1001
-COPY mehdb .
+
+COPY go.mod go.sum ./
+RUN go mod download && go mod verify
+
+COPY . ./
+
+RUN make
+
+FROM scratch
+COPY --from=build /app/mehdb /mehdb
+
 EXPOSE 9876
-CMD ["/app/mehdb"]
+CMD ["/mehdb"]
